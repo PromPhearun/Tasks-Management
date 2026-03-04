@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <div>
+                <h1>Task Manager</h1>
+                <p class="lead">Add, complete, and remove tasks — accessible and responsive.</p>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container" id="main">
+        <section aria-labelledby="task-form-heading" class="task-panel">
+            <h2 id="task-form-heading">Create a task</h2>
+            <form id="task-form" aria-describedby="form-help">
+                <label for="task-input" class="visually-hidden">Task description</label>
+                <div class="form-row">
+                    <input id="task-input" name="task" type="text" placeholder="What needs doing?" required
+                        minlength="1" aria-label="Task description">
+                    <button type="submit" id="add-btn" class="btn-primary">Add</button>
+                </div>
+                <p id="form-help" class="form-help">Press Enter or click Add to create a task.</p>
+            </form>
+        </section>
+
+        <section aria-labelledby="tasks-heading" class="task-list-panel">
+            <h2 id="tasks-heading">Tasks</h2>
+            <div class="filters" role="tablist" aria-label="Filter tasks">
+                <button id="filter-all" class="filter-btn" aria-pressed="true">All</button>
+                <button id="filter-active" class="filter-btn" aria-pressed="false">Active</button>
+                <button id="filter-completed" class="filter-btn" aria-pressed="false">Completed</button>
+            </div>
+            <div id="status" class="sr-only" aria-live="polite"></div>
+            <ul id="task-list" class="task-list" role="list"></ul>
+            <p id="empty-msg" class="empty-msg">No tasks yet — add your first task above.</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">Made with care — accessible semantic HTML.</div>
+    </footer>
+
+    <script src="app.js" defer></script>
+</body>
+
+</html>
