@@ -35,6 +35,17 @@
             </form>
         </section>
 
+        <section aria-labelledby="calendar-heading" class="calendar-panel">
+            <h2 id="calendar-heading">Calendar</h2>
+            <div class="calendar-nav">
+                <button id="cal-prev" class="btn-icon cal-nav-btn" aria-label="Previous month">◀</button>
+                <span id="cal-month-label" class="cal-month-label"></span>
+                <button id="cal-next" class="btn-icon cal-nav-btn" aria-label="Next month">▶</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Task calendar"></div>
+            <div id="cal-day-tasks" class="cal-day-tasks" aria-live="polite"></div>
+        </section>
+
         <section aria-labelledby="tasks-heading" class="task-list-panel">
             <h2 id="tasks-heading">Tasks</h2>
             <div class="filters" role="tablist" aria-label="Filter tasks">
