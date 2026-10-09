@@ -1,69 +1,210 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Task Manager</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description"
+    content="A fast, accessible task manager: capture tasks, set priorities and due dates, filter, search, and track progress in a calendar view." />
+  <title>Task Manager</title>
+  <script>
+    /* Apply the saved theme before first paint so the page never flashes the wrong colours. */
+    (function () {
+      var THEME_KEY = 'theme-v1';
+      var theme = 'dark';
+      try {
+        var stored = localStorage.getItem(THEME_KEY);
+        var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        theme = (stored === 'light' || stored === 'dark') ? stored : (prefersLight ? 'light' : 'dark');
+      } catch (error) { /* localStorage unavailable — fall back to dark */ }
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <div>
-                <h1>Task Manager</h1>
-                <p class="lead">Add, complete, and remove tasks — accessible and responsive.</p>
-            </div>
-            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
-                <span class="theme-icon">🌙</span>
-            </button>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="app-header">
+    <div class="shell app-header__inner">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12.5 9 17.5 20 6.5" />
+          </svg>
+        </span>
+        <div class="brand__text">
+          <h1 class="brand__title">Task Manager</h1>
+          <p class="brand__tagline">Plan, focus, finish — everything stays in this browser.</p>
         </div>
-    </header>
+      </div>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to light theme"
+        title="Switch theme" aria-pressed="false">
+        <span class="theme-icon" aria-hidden="true">☀️</span>
+      </button>
+    </div>
+  </header>
 
-    <main class="container" id="main">
-        <section aria-labelledby="task-form-heading" class="task-panel">
-            <h2 id="task-form-heading">Create a task</h2>
-            <form id="task-form" aria-describedby="form-help">
-                <label for="task-input" class="visually-hidden">Task description</label>
-                <div class="form-row">
-                    <input id="task-input" name="task" type="text" placeholder="What needs doing?" required
-                        minlength="1" aria-label="Task description">
-                    <button type="submit" id="add-btn" class="btn-primary">Add</button>
-                </div>
-                <p id="form-help" class="form-help">Press Enter or click Add to create a task.</p>
-            </form>
-        </section>
+  <main id="main" class="shell">
+    <section class="panel composer" aria-labelledby="composer-heading">
+      <h2 id="composer-heading" class="panel__title">Add a task</h2>
+      <form id="task-form" class="composer__form" aria-describedby="form-help">
+        <div class="field field--grow">
+          <label class="field__label" for="task-input">Task</label>
+          <input id="task-input" class="input" name="task" type="text" placeholder="What needs doing?" required
+            autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="task-priority">Priority</label>
+          <select id="task-priority" class="input" name="priority">
+            <option value="low">Low</option>
+            <option value="normal" selected>Normal</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label" for="task-due">Due date</label>
+          <input id="task-due" class="input" name="due" type="date" />
+        </div>
+        <button type="submit" id="add-btn" class="button button--primary composer__submit">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Add task</span>
+        </button>
+      </form>
+      <p class="form-help" id="form-help">
+        <kbd>N</kbd> jumps to this field, <kbd>/</kbd> searches, <kbd>Esc</kbd> clears filters. Due dates drive the
+        calendar.
+      </p>
+    </section>
 
-        <section aria-labelledby="calendar-heading" class="calendar-panel">
-            <h2 id="calendar-heading">Calendar</h2>
-            <div class="calendar-nav">
-                <button id="cal-prev" class="btn-icon cal-nav-btn" aria-label="Previous month">◀</button>
-                <span id="cal-month-label" class="cal-month-label"></span>
-                <button id="cal-next" class="btn-icon cal-nav-btn" aria-label="Next month">▶</button>
-            </div>
-            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Task calendar"></div>
-            <div id="cal-day-tasks" class="cal-day-tasks" aria-live="polite"></div>
-        </section>
+    <div class="layout">
+      <section class="panel tasks-panel" aria-labelledby="tasks-heading">
+        <div class="panel__head">
+          <h2 id="tasks-heading" class="panel__title">Tasks</h2>
+          <ul class="stats" id="stats">
+            <li class="stat"><strong id="stat-total">0</strong> total</li>
+            <li class="stat stat--active"><strong id="stat-active">0</strong> active</li>
+            <li class="stat stat--done"><strong id="stat-completed">0</strong> done</li>
+            <li class="stat stat--overdue" id="stat-overdue-item" hidden><strong id="stat-overdue">0</strong> overdue
+            </li>
+          </ul>
+        </div>
 
-        <section aria-labelledby="tasks-heading" class="task-list-panel">
-            <h2 id="tasks-heading">Tasks</h2>
-            <div class="filters" role="tablist" aria-label="Filter tasks">
-                <button id="filter-all" class="filter-btn" aria-pressed="true">All</button>
-                <button id="filter-active" class="filter-btn" aria-pressed="false">Active</button>
-                <button id="filter-completed" class="filter-btn" aria-pressed="false">Completed</button>
-            </div>
-            <div id="status" class="sr-only" aria-live="polite"></div>
-            <ul id="task-list" class="task-list" role="list"></ul>
-            <p id="empty-msg" class="empty-msg">No tasks yet — add your first task above.</p>
-        </section>
-    </main>
+        <div class="progress">
+          <div class="progress__track" id="progress-bar" role="progressbar" aria-labelledby="progress-label"
+            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="progress__fill" id="progress-fill"></span>
+          </div>
+          <p class="progress__label" id="progress-label">No tasks yet</p>
+        </div>
 
-    <footer class="site-footer">
-        <div class="container">Made with care — accessible semantic HTML.</div>
-    </footer>
+        <div class="toolbar">
+          <div class="field field--grow">
+            <label class="visually-hidden" for="search-input">Search tasks</label>
+            <input id="search-input" class="input input--search" type="search" placeholder="Search tasks…"
+              autocomplete="off" />
+          </div>
+          <div class="field">
+            <label class="visually-hidden" for="sort-select">Sort tasks</label>
+            <select id="sort-select" class="input">
+              <option value="created-desc">Newest first</option>
+              <option value="created-asc">Oldest first</option>
+              <option value="priority">Priority</option>
+              <option value="due">Due date</option>
+              <option value="alpha">A → Z</option>
+            </select>
+          </div>
+          <button id="clear-completed" class="button button--ghost" type="button" disabled>Clear completed</button>
+        </div>
 
-    <script src="app.js" defer></script>
+        <div class="filters" role="group" aria-label="Filter tasks">
+          <button id="filter-all" class="chip" type="button" aria-pressed="true">
+            All <span class="chip__count" id="count-all">0</span>
+          </button>
+          <button id="filter-active" class="chip" type="button" aria-pressed="false">
+            Active <span class="chip__count" id="count-active">0</span>
+          </button>
+          <button id="filter-completed" class="chip" type="button" aria-pressed="false">
+            Completed <span class="chip__count" id="count-completed">0</span>
+          </button>
+          <button id="filter-overdue" class="chip" type="button" aria-pressed="false">
+            Overdue <span class="chip__count" id="count-overdue">0</span>
+          </button>
+        </div>
+
+        <p class="active-filters" id="active-filters" hidden>
+          <span id="active-filters-text"></span>
+          <button type="button" id="clear-filters" class="button button--link">Clear</button>
+        </p>
+
+        <div id="status" class="visually-hidden" aria-live="polite"></div>
+
+        <ul id="task-list" class="task-list" tabindex="-1" data-focus="list"></ul>
+
+        <div id="empty-state" class="empty-state" hidden>
+          <span class="empty-state__icon" id="empty-icon" aria-hidden="true">🗒️</span>
+          <p class="empty-state__title" id="empty-msg">No tasks yet</p>
+          <p class="empty-state__hint" id="empty-hint">Add your first task above to get started.</p>
+        </div>
+      </section>
+
+      <aside class="panel calendar-panel" aria-labelledby="calendar-heading">
+        <div class="panel__head">
+          <h2 id="calendar-heading" class="panel__title">Calendar</h2>
+          <button id="cal-today" class="button button--ghost button--sm" type="button">Today</button>
+        </div>
+        <div class="calendar-nav">
+          <button id="cal-prev" class="icon-button icon-button--bordered" type="button" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+          </button>
+          <span class="calendar-nav__label" id="cal-month-label" aria-live="polite"></span>
+          <button id="cal-next" class="icon-button icon-button--bordered" type="button" aria-label="Next month">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+        <table class="calendar" id="calendar">
+          <caption class="visually-hidden">
+            Tasks by date. Use the arrow keys to move between days and Enter to filter the task list by that day.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col"><abbr title="Sunday">Sun</abbr></th>
+              <th scope="col"><abbr title="Monday">Mon</abbr></th>
+              <th scope="col"><abbr title="Tuesday">Tue</abbr></th>
+              <th scope="col"><abbr title="Wednesday">Wed</abbr></th>
+              <th scope="col"><abbr title="Thursday">Thu</abbr></th>
+              <th scope="col"><abbr title="Friday">Fri</abbr></th>
+              <th scope="col"><abbr title="Saturday">Sat</abbr></th>
+            </tr>
+          </thead>
+          <tbody id="calendar-body"></tbody>
+        </table>
+        <p class="calendar-hint">Dots mark days with tasks. Select a day to filter the list.</p>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="shell">
+      <p>Tasks live in this browser's local storage — nothing leaves your device.</p>
+    </div>
+  </footer>
+
+  <div class="toast-region" id="toast-region" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+  <script src="app.js" defer></script>
 </body>
 
 </html>
