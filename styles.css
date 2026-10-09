@@ -10,7 +10,7 @@
   /* Palette — dark (default) */
   --bg: #070a14;
   --bg-glow-1: rgba(124, 92, 255, 0.22);
-  --bg-glow-2: rgba(34, 211, 238, 0.14);
+  --bg-glow-2: rgba(34, 211, 238, 0.1);
   --surface: rgba(255, 255, 255, 0.035);
   --surface-2: rgba(255, 255, 255, 0.05);
   --surface-raised: rgba(13, 19, 36, 0.72);
@@ -23,8 +23,8 @@
   --text-muted: #9dabc4;
   --text-subtle: #74839d;
 
-  --accent: #7c5cff;
-  --accent-hover: #8d70ff;
+  --accent: #6a45f0;
+  --accent-hover: #7350f7;
   --accent-contrast: #ffffff;
   --accent-text: #b6aaff;
   --accent-soft: rgba(124, 92, 255, 0.18);
@@ -48,13 +48,15 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
-  --space-7: 3rem;
 
   /* Radius scale */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-full: 999px;
+
+  /* Mask-based icon so it inherits the current theme colour. */
+  --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
 
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -66,8 +68,8 @@
   color-scheme: light;
 
   --bg: #f4f5fb;
-  --bg-glow-1: rgba(124, 92, 255, 0.16);
-  --bg-glow-2: rgba(34, 211, 238, 0.14);
+  --bg-glow-1: rgba(124, 92, 255, 0.1);
+  --bg-glow-2: rgba(34, 211, 238, 0.1);
   --surface: rgba(255, 255, 255, 0.86);
   --surface-2: #f5f6fc;
   --surface-raised: #ffffff;
@@ -78,20 +80,20 @@
 
   --text: #141a2e;
   --text-muted: #59627a;
-  --text-subtle: #7b8399;
+  --text-subtle: #666e80;
 
   --accent: #6544f0;
   --accent-hover: #5535e0;
   --accent-contrast: #ffffff;
-  --accent-text: #5b3df0;
+  --accent-text: #4a2ecd;
   --accent-soft: rgba(101, 68, 240, 0.12);
   --accent-2: #0d9fbd;
 
-  --success: #148257;
+  --success: #0f6b47;
   --success-soft: rgba(20, 130, 87, 0.12);
-  --warning: #9a6400;
+  --warning: #7a4d00;
   --warning-soft: rgba(154, 100, 0, 0.12);
-  --danger: #c62b47;
+  --danger: #b02340;
   --danger-soft: rgba(198, 43, 71, 0.1);
 
   --focus: #4a2ecd;
@@ -109,6 +111,11 @@
   box-sizing: border-box;
 }
 
+/* Author `display` declarations would otherwise beat the UA [hidden] rule. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100%;
@@ -120,7 +127,6 @@ body {
   background-image:
     radial-gradient(52rem 30rem at 8% -12%, var(--bg-glow-1), transparent 62%),
     radial-gradient(44rem 26rem at 96% 0%, var(--bg-glow-2), transparent 58%);
-  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -221,6 +227,10 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
+.brand__text {
+  min-width: 0;
+}
+
 .brand__title {
   font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
   line-height: 1.2;
@@ -251,6 +261,10 @@ select {
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+
+.tasks-panel {
+  min-width: 0;
 }
 
 .panel__title {
@@ -326,11 +340,25 @@ select.input {
 }
 
 .input--search {
-  padding-inline-start: 2.1rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23948fb5' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: 0.6rem center;
-  background-size: 1.05rem;
+  padding-inline-start: 2.2rem;
+}
+
+.field--search {
+  position: relative;
+}
+
+.field--search::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0.7rem;
+  top: 50%;
+  width: 1rem;
+  height: 1rem;
+  transform: translateY(-50%);
+  background-color: var(--text-subtle);
+  -webkit-mask: var(--icon-search) no-repeat center / contain;
+  mask: var(--icon-search) no-repeat center / contain;
+  pointer-events: none;
 }
 
 .form-help {
@@ -714,6 +742,11 @@ select.input {
   white-space: nowrap;
 }
 
+.badge--plain {
+  background: var(--surface-raised);
+  color: var(--text-muted);
+}
+
 .badge--priority-high {
   background: var(--danger-soft);
   color: var(--danger);
@@ -873,15 +906,24 @@ select.input {
 }
 
 .cal-day.has-overdue::after {
+  /* Square, so "overdue" is not signalled by colour alone. */
+  border-radius: 1px;
   background: var(--danger);
 }
 
 .cal-day.has-completed::after {
-  background: var(--success);
+  /* Hollow, so "everything done" is not signalled by colour alone. */
+  border: 2px solid var(--success);
+  background: transparent;
 }
 
 .cal-day.is-selected.has-tasks::after {
   background: var(--accent-contrast);
+}
+
+.cal-day.is-selected.has-completed::after {
+  border-color: var(--accent-contrast);
+  background: transparent;
 }
 
 .calendar-hint {
@@ -1054,10 +1096,15 @@ select.input {
 @media (forced-colors: active) {
 
   .chip[aria-pressed="true"],
-  .button--primary {
+  .button--primary,
+  .cal-day.is-selected {
     forced-color-adjust: none;
     background: Highlight;
     color: HighlightText;
+  }
+
+  .cal-day.is-today {
+    border-color: Highlight;
   }
 
   .task-item,
@@ -1073,4 +1120,55 @@ select.input {
 .task-item.is-editing {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "label";
+}
+
+/* ==========================================================================
+   Print
+   ========================================================================== */
+
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --surface-raised: #ffffff;
+    --toast-bg: #ffffff;
+    --border: #c9cde0;
+    --border-strong: #6b7285;
+    --text: #141a2e;
+    --text-muted: #3f4757;
+    --text-subtle: #4a5262;
+    --accent: #4a2ecd;
+    --accent-text: #3b23a8;
+    --accent-contrast: #ffffff;
+    --success: #0f6b47;
+    --warning: #7a4d00;
+    --danger: #b02340;
+  }
+
+  body {
+    background-image: none;
+  }
+
+  .app-header,
+  .composer,
+  .toolbar,
+  .filters,
+  .active-filters,
+  .task-item__actions,
+  .calendar-hint,
+  .toast-region,
+  .skip-link {
+    display: none !important;
+  }
+
+  .panel {
+    border: 1px solid #c9cde0;
+    box-shadow: none;
+  }
+
+  .calendar-panel {
+    position: static;
+  }
 }

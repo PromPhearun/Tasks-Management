@@ -42,20 +42,20 @@
         </div>
       </div>
       <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to light theme"
-        title="Switch theme" aria-pressed="false">
+        title="Switch theme">
         <span class="theme-icon" aria-hidden="true">☀️</span>
       </button>
     </div>
   </header>
 
-  <main id="main" class="shell">
+  <main id="main" class="shell" tabindex="-1">
     <section class="panel composer" aria-labelledby="composer-heading">
       <h2 id="composer-heading" class="panel__title">Add a task</h2>
-      <form id="task-form" class="composer__form" aria-describedby="form-help">
+      <form id="task-form" class="composer__form">
         <div class="field field--grow">
           <label class="field__label" for="task-input">Task</label>
           <input id="task-input" class="input" name="task" type="text" placeholder="What needs doing?" required
-            autocomplete="off" />
+            autocomplete="off" aria-describedby="form-help" />
         </div>
         <div class="field">
           <label class="field__label" for="task-priority">Priority</label>
@@ -97,7 +97,7 @@
         </div>
 
         <div class="progress">
-          <div class="progress__track" id="progress-bar" role="progressbar" aria-labelledby="progress-label"
+          <div class="progress__track" id="progress-bar" role="progressbar" aria-label="Task progress"
             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <span class="progress__fill" id="progress-fill"></span>
           </div>
@@ -105,7 +105,7 @@
         </div>
 
         <div class="toolbar">
-          <div class="field field--grow">
+          <div class="field field--grow field--search">
             <label class="visually-hidden" for="search-input">Search tasks</label>
             <input id="search-input" class="input input--search" type="search" placeholder="Search tasks…"
               autocomplete="off" />
@@ -140,7 +140,7 @@
 
         <p class="active-filters" id="active-filters" hidden>
           <span id="active-filters-text"></span>
-          <button type="button" id="clear-filters" class="button button--link">Clear</button>
+          <button type="button" id="clear-filters" class="button button--link">Clear filters</button>
         </p>
 
         <div id="status" class="visually-hidden" aria-live="polite"></div>
@@ -166,7 +166,7 @@
               <path d="M15 6l-6 6 6 6" />
             </svg>
           </button>
-          <span class="calendar-nav__label" id="cal-month-label" aria-live="polite"></span>
+          <span class="calendar-nav__label" id="cal-month-label"></span>
           <button id="cal-next" class="icon-button icon-button--bordered" type="button" aria-label="Next month">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

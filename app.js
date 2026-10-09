@@ -247,7 +247,6 @@ function applyTheme(theme, { persist = true } = {}) {
 
   const icon = dom.themeToggle.querySelector('.theme-icon');
   if (icon) icon.textContent = isLight ? '🌙' : '☀️';
-  dom.themeToggle.setAttribute('aria-pressed', String(isLight));
   dom.themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
 
   if (persist) writeStorage(THEME_KEY, isLight ? 'light' : 'dark');
@@ -315,16 +314,22 @@ function sortTasks(list) {
   }
 }
 
-function visibleTasks() {
-  return sortTasks(tasks.filter((task) => matchesDay(task) && matchesQuery(task) && matchesFilter(task)));
+function scopedTasks() {
+  return tasks.filter((task) => matchesDay(task) && matchesQuery(task));
 }
 
+function visibleTasks() {
+  return sortTasks(scopedTasks().filter(matchesFilter));
+}
+
+/** Counts for the current day/search scope, so chips always match the list. */
 function countByFilter() {
+  const scope = scopedTasks();
   return {
-    all: tasks.length,
-    active: tasks.filter((task) => !task.completed).length,
-    completed: tasks.filter((task) => task.completed).length,
-    overdue: tasks.filter(isOverdue).length,
+    all: scope.length,
+    active: scope.filter((task) => !task.completed).length,
+    completed: scope.filter((task) => task.completed).length,
+    overdue: scope.filter(isOverdue).length,
   };
 }
 
@@ -406,9 +411,7 @@ function renderActiveFilters() {
   if (view.query) parts.push(`matching “${view.query}”`);
 
   dom.activeFilters.hidden = parts.length === 0;
-  if (parts.length > 0) {
-    dom.activeFiltersText.textContent = `Showing ${parts.join(' · ')}`;
-  }
+  dom.activeFiltersText.textContent = parts.length > 0 ? `Showing ${parts.join(' · ')}` : '';
 }
 
 function renderEmptyState() {
@@ -691,7 +694,9 @@ function renderCalendar(focus = null) {
       button.classList.add('is-today');
       button.setAttribute('aria-current', 'date');
     }
-    if (view.day === dateKey) button.classList.add('is-selected');
+    const isSelected = view.day === dateKey;
+    button.setAttribute('aria-pressed', String(isSelected));
+    if (isSelected) button.classList.add('is-selected');
 
     let label = `${WEEKDAY_NAMES[weekday]} ${day} ${MONTH_NAMES[month]} ${year}`;
     if (isToday) label += ', today';
@@ -734,7 +739,15 @@ function shiftMonth(delta) {
   const date = new Date(calendarState.year, calendarState.month + delta, 1);
   calendarState.year = date.getFullYear();
   calendarState.month = date.getMonth();
-  renderCalendar();
+
+  // A day filter pointing at another month would hide the list with no visible cause.
+  if (view.day) {
+    view.day = null;
+    renderAll();
+  } else {
+    renderCalendar();
+  }
+
   announce(`${MONTH_NAMES[calendarState.month]} ${calendarState.year}`);
 }
 
@@ -778,11 +791,13 @@ function handleCalendarKeydown(event) {
       next = new Date(year, month, dayOfMonth + (6 - date.getDay()));
       break;
     case 'PageUp':
-      next = new Date(year, month - 1, dayOfMonth);
+    case 'PageDown': {
+      const step = event.key === 'PageUp' ? -1 : 1;
+      const targetMonth = month + step;
+      const lastDay = new Date(year, targetMonth + 1, 0).getDate();
+      next = new Date(year, targetMonth, Math.min(dayOfMonth, lastDay));
       break;
-    case 'PageDown':
-      next = new Date(year, month + 1, dayOfMonth);
-      break;
+    }
     default:
       return;
   }
@@ -798,7 +813,6 @@ function focusDate(date) {
     calendarState.year = date.getFullYear();
     calendarState.month = date.getMonth();
     renderCalendar();
-    dom.calendarLabel.textContent = `${MONTH_NAMES[calendarState.month]} ${calendarState.year}`;
   }
 
   const target = dom.calendarBody.querySelector(`.cal-day[data-date="${key}"]`);
@@ -861,9 +875,8 @@ function showToast(message, { actionLabel = null, onAction = null } = {}) {
   toast.appendChild(close);
 
   dom.toastRegion.appendChild(toast);
-  while (dom.toastRegion.children.length > MAX_TOASTS) {
-    dom.toastRegion.firstElementChild.remove();
-  }
+  const queued = Array.from(dom.toastRegion.children);
+  queued.slice(0, Math.max(0, queued.length - MAX_TOASTS)).forEach(dismissToast);
 
   nextFrame(() => toast.classList.add('is-visible'));
 
@@ -974,6 +987,7 @@ function handleSubmit(event) {
 
   const text = dom.input.value.trim();
   if (text === '') {
+    // Defensive: `required` blocks this in the UI, but not for programmatic submits.
     dom.input.focus();
     announce('Please type a task before adding it.');
     return;
